@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=1024, initial-scale=1.0">
+    <title>Healthcare Expenditure</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="main">
+        <div id="header">
+            <div id="logo">
+                <div id="logo_text">
+                    <h1><a href="index.html">DATS 6401</a> | <span class="logo_color">Project 1</span></h1>
+                    <h2>Visualization of Educational, Healthcare, Military Spending of the Top 10 Nations</h2>
+                </div><!-- logo_text-->
+            </div><!-- logo-->
+
+            <div id="menubar">
+                <ul id="menu">
+                    <li><a href="index.html">HOME</a></li>
+                    <li><a href="gdp.html">GDP OVERVIEW</a></li>
+                    <li><a href="educational.html">EDUCATION</a></li>
+                    <li class="selected"><a href="healthcare.html">HEALTHCARE</a></li>
+                    <li><a href="military.html">MILITARY</a></li>
+                </ul> <!--menu -->
+            </div><!-- menubar -->
+        </div><!-- header -->
+
+        <div id="site_content">
+
+            <div id="content">
+                <script src="https://www.gstatic.com/charts/loader.js"></script>
+                <script>
+                    google.charts.load('current', {'packages':['corechart', 'geochart']});
+                    google.charts.setOnLoadCallback(drawAllSheets);
+
+                    function drawAllSheets() {
+                        drawSheetName("healthcare(billion)", "SELECT A,B,C,D,E,F,G", healthcareSpendingResponseHandler);
+                        drawSheetName("SharedGDP", "SELECT A,I,K,M", SharedGDPResponseHandler);
+                        drawSheetName("edu_health_mil", "SELECT A,Q", avgHealthSpendingResponseHandler);
+                        drawSheetName("healthcare(billion)", "SELECT A,H", fastGrowHealthcareSpendingResponseHandler);
+                        drawSheetName("healthcare(billion)", "SELECT A,I", fastGrowRateHealthcareSpendingResponseHandler);
+                    } //drawAllSheets
+
+                    function drawSheetName(sheetName, query, responseHandler){
+                        var queryString = encodeURIComponent(query); 
+                        var query = new google.visualization.Query(
+                            "https://docs.google.com/spreadsheets/d/1fWBuAxDNyMAjCMXcghR0PKu70uZLaffMhxkngFdBOk4/gviz/tq?sheet="
+                            + sheetName + '&headers=1&tq=' + queryString);
+                    
+                    query.send(responseHandler);
+                    } //drawSheetName
+
+                    function checkError(response){
+                        if (response.isError()) {
+                            alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+                            return;
+                        }
+                    } //checkError
+
+                    function healthcareSpendingResponseHandler(response){
+                        var data = response.getDataTable();
+                        data.sort({column: 6, desc: true});
+
+                        var options = {
+                            title: 'Healthcare Expenditure in 2013-2018',
+                            vAxis: {title: "Spending in Billions($)"},
+                            hAxis: {title: "Country Name"}
+                        }
+
+                        var chart = new google.visualization.ColumnChart(document.getElementById("healthcare_spending_div"));
+                        chart.draw(data, options);
+                    } //healthcareSpendingResponseHandler
+
+
+                    function SharedGDPResponseHandler(response){
+                    checkError(response);
+                    var data = response.getDataTable();
+                    data.sort({column: 1, desc: true});
+
+                    var options = {
+                        title: "Healthcare Expenditure vs. GDP in 2018",
+                        vAxis: {title: "GDP Per Capita in USD"},
+                        hAxis: {title: "Healthcare Expenditure Per Capita in USD"},
+                        colors: ["#FF8D00"]
+                    }; 
+                    
+                    var chart = new google.visualization.BubbleChart(document.getElementById('healthcare_shared_gdp_div'));
+                    chart.draw(data, options);
+                    } //SharedGDPResponseHandler
+
+
+                    function avgHealthSpendingResponseHandler(response){
+                    checkError(response);
+                    var data = response.getDataTable();
+                    data.sort({column: 1, desc: true});
+
+                    var options = {
+                            title: "Average Healthcare Expenditure in Billion($) (2013-2018)",
+                            is3D: true
+                        };
+
+                    var chart = new google.visualization.PieChart(document.getElementById("avg_health_spending_div"));
+                    chart.draw(data, options);
+                    } //avgHealthSpendingResponseHandler
+
+
+
+                    function fastGrowHealthcareSpendingResponseHandler(response){
+                        checkError(response);
+                        var data = response.getDataTable();
+                        data.sort({column: 1, desc: true});
+
+                        var options = {
+                            legend:"none",
+                            bars: "horizontal",
+                            colors: ["#40B14B"],
+                            annotation: {alwaysOutside: true},
+                            title: 'Fastest Growing in Healthcare Expenditure in Billion(2013-2018)',
+                            vAxis: {title: "Country Name"},
+                            hAxis: {title: "Grow Value($)"}
+                        };
+
+                        var view = new google.visualization.DataView(data);
+                        view.setColumns([0,1, {
+                            calc: function(dt, row){
+                                return Math.floor(dt.getFormattedValue(row, 1)) + 'B';
+                            },
+                            sourceColumn: 1,
+                            type: 'string',
+                            role: 'annotation'
+                        }]);
+                        
+                        var  chart = new google.visualization.BarChart(document.getElementById('fast_grow_healthcare_spending_div'));
+                        chart.draw(view, options);
+                    } //fastGrowHealthcareSpendingResponseHandler
+
+
+                    function fastGrowRateHealthcareSpendingResponseHandler(response){
+                        checkError(response);
+                        var data = response.getDataTable();
+                        data.sort({column: 1, desc: true});
+
+                        var options = {
+                            legend:"none",
+                            bars: "horizontal",
+                            colors: ["#EA352E"],
+                            annotation: {alwaysOutside: true},
+                            title: 'Fastest Growing in Healthcare Expenditure in Percentage(2013-2018)',
+                            vAxis: {title: "Grow Rate(%）"},
+                            hAxis: {title: "Country Name"}
+                        };
+
+                        var view = new google.visualization.DataView(data);
+                        view.setColumns([0,1, {
+                            calc: function(dt, row){
+                                return Math.ceil(dt.getFormattedValue(row, 1)) + '%';
+                            },
+                            sourceColumn: 1,
+                            type: 'string',
+                            role: 'annotation'
+                        }]);
+
+                        var chart = new google.visualization.ColumnChart(document.getElementById("fast_grow_rate_healthcare_spending_div"));
+                        chart.draw(view, options );
+                    }; //fastGrowHealthcareRateSpendingResponseHandler
+
+
+                </script>
+
+                <h3>Overall Healthcare Expenditure</h3>
+                <div id="healthcare_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: United States - $3470 in 2018</h4>
+                <h4>Top 2: China - $697 in 2018, almost 5 times less than United States</h4>
+                <h4>Saudi Aribia the least, around the same value.</h4>
+                <br>
+                <div id="healthcare_shared_gdp_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: United States - both in per capita of healthcare and GDP</h4>
+                <h4>Inida and China have the least value in both per capita of healthcare and GDP due to their large population</h4>
+                <br>
+                <h3>Average Healthcare Expenditure</h3>
+                <div id="avg_health_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: United States - 50%, more than the total of all the rest countries</h4>
+                <h4>Top 2: China - ONLY 9%</h4>
+                <br>
+                <h3>Fastest Growing Countries in Fixed Value</h3>
+                <div id="fast_grow_healthcare_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: United States - $753 billion</h4>
+                <h4>Top 2: China - $255 billion</h4>
+                <h4>Russia decreased the most - (-27.53) billion</h4>
+                <br>
+                <h3>Fastest Growing Countries in Percentage</h3>
+                <div id="fast_grow_rate_healthcare_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: China - 58%</h4>
+                <h4>Korea Republic ans Saudi Arabia both increase more than 50%</h4>
+
+            </div><!-- content -->
+        </div><!-- site_content -->
+
+        <div id="content_footer">
+            <div id="footer">
+                &copy; <script>var d = new Date(); document.write(d.getFullYear());</script>           
+                | YUSHUANG(ZOEY) ZHAO
+            </div><!--footer-->
+
+        </div><!--content_footer -->
+
+    </div><!-- main --> 
+</body>
+
+</html>

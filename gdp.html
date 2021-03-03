@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=1024, initial-scale=1.0">
+    <title>GDP Overview</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="main">
+        <div id="header">
+            <div id="logo">
+                <div id="logo_text">
+                    <h1><a href="index.html">DATS 6401</a> | <span class="logo_color"></span>Project 1</span></h1>
+                    <h2>Visualization of Educational, Healthcare, Military Spending of the Top 10 Nations</h2>
+                </div><!-- logo_text-->
+            </div><!-- logo-->
+
+            <div id="menubar">
+                <ul id="menu">
+                    <li><a href="index.html">HOME</a></li>
+                    <li class="selected"><a href="gdp.html">GDP OVERVIEW</a></li>
+                    <li><a href="educational.html">EDUCATIONAL</a></li>
+                    <li><a href="healthcare.html">HEALTHCARE</a></li>
+                    <li><a href="military.html">MILITARY</a></li>
+                </ul> <!--menu -->
+            </div><!-- menubar -->
+        </div><!-- header -->
+
+        <div id="site_content">
+
+            <div id="content">
+                <script src="https://www.gstatic.com/charts/loader.js"></script>
+                <script>
+                    google.charts.load('current', {'packages':['corechart', 'geochart']});
+                    google.charts.setOnLoadCallback(drawAllSheets);
+
+                    function drawAllSheets() {
+                        drawSheetName("edu_health_mil", "SELECT A,S", GDPResponseHandler);
+                        drawSheetName("GDP(billion)", "SELECT A,G", totalGDPResponseHandler);
+                        drawSheetName("PerCapitaGDP", "SELECT A,G", percapitaGDPResponseHandler);
+                       } //drawAllSheets
+
+                    function drawSheetName(sheetName, query, responseHandler){
+                        var queryString = encodeURIComponent(query); 
+                        var query = new google.visualization.Query(
+                            "https://docs.google.com/spreadsheets/d/1fWBuAxDNyMAjCMXcghR0PKu70uZLaffMhxkngFdBOk4/gviz/tq?sheet="
+                            + sheetName + '&headers=1&tq=' + queryString);
+                    
+                    query.send(responseHandler);
+                    } //drawSheetName
+
+                    function checkError(response){
+                        if (response.isError()) {
+                            alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+                            return;
+                        }
+                    } //checkError
+
+                    function GDPResponseHandler(response){
+                        var data = response.getDataTable();
+                        data.sort({column: 1, desc: true});
+
+                        var options = {
+                            colorAxis: {colors: ['#e7711c', '#4374e0']}, 
+                            vAxis: {title: "Total GDP in 2018 (Billions)"}
+                        };
+
+                        var chart = new google.visualization.GeoChart(document.getElementById("gdp_div"));
+                        chart.draw(data, options);
+                    } //militarySpendingResponseHandler
+
+
+                    function totalGDPResponseHandler(response){
+                        checkError(response);
+                        var data = response.getDataTable();
+                        data.sort({column: 1, desc: true});
+                        
+                        var chart = new google.visualization.ColumnChart(document.getElementById('total_gdp_div'));
+                        chart.draw(data, {title: 'Total GDP in 2018'});
+                    } //topPerCapitaResponseHandler
+                    
+                    function percapitaGDPResponseHandler(response){
+                    checkError(response);
+                    var data = response.getDataTable();
+                    data.sort({column: 1, desc: true});
+
+                    var options = {
+                            title: "GDP Per Capita ($USD) in 2018",
+                            pieHole: 0.4,
+                    }
+
+                    var chart = new google.visualization.PieChart(document.getElementById('per_capita_gdp_div'));
+                    chart.draw(data, options);
+                    } //percapitaGDPResponseHandler
+
+                </script>
+
+                <br>
+                <h3>Average GDP in Billion(2013-2018)</h3>
+                <div id="gdp_div" style="width: 800px; height:500px;"></div>
+                <h4>United states has the highest average of GDP.</h4>
+                <h4>China ranked second</h4>
+                <br>
+                <h3>Total GDP in 2018</h3>
+                <div id="total_gdp_div" style="width: 800px; height:500px;"></div>
+                <h4>Top two countries:United states and China.</h4>
+                <h4>Saudi Arabia produced least GDP</h4>
+                <br>
+                <h3>GDP Per Capita in Billion(2013-2018)</h3>
+                <div id="per_capita_gdp_div" style="width: 800px; height:500px;"></div>
+                <h4>United States and Austrilia have the highest GDP Per Capita.</h4>
+                <h4>China takes only 2% among all those countries.</h4>
+
+            </div><!-- content -->
+        </div><!-- site_content -->
+
+        <div id="content_footer">
+            <div id="footer">
+                &copy; <script>var d = new Date(); document.write(d.getFullYear());</script>            
+                | YUSHUANG(ZOEY) ZHAO
+            </div><!--footer-->
+
+        </div><!--content_footer -->
+
+    </div><!-- main --> 
+</body>
+
+</html>

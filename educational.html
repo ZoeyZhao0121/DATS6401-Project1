@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=1024, initial-scale=1.0">
+    <title>Educational Expenditure</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="main">
+        <div id="header">
+            <div id="logo">
+                <div id="logo_text">
+                    <h1><a href="index.html">DATS 6401</a> | <span class="logo_color"></span>Project 1</span></h1>
+                    <h2>Visualization of Educational, Healthcare, Military Spending of the Top 10 Nations</h2>
+                </div><!-- logo_text-->
+            </div><!-- logo-->
+
+            <div id="menubar">
+                <ul id="menu">
+                    <li><a href="index.html">HOME</a></li>
+                    <li><a href="gdp.html">GDP OVERVIEW</a></li>
+                    <li class="selected"><a href="educational.html">EDUCATION</a></li>
+                    <li><a href="healthcare.html">HEALTHCARE</a></li>
+                    <li><a href="military.html">MILITARY</a></li>
+                </ul> <!--menu -->
+            </div><!-- menubar -->
+        </div><!-- header -->
+
+        <div id="site_content">
+
+            <div id="content">
+                <script src="https://www.gstatic.com/charts/loader.js"></script>
+                <script>
+                    google.charts.load('current', {'packages':['corechart', 'geochart']});
+                    google.charts.setOnLoadCallback(drawAllSheets);
+
+                    function drawAllSheets() {
+                        drawSheetName("education(billion)", "SELECT A,B,C,D,E,F,G", educationSpendingResponseHandler);
+                        drawSheetName("edu_health_mil", "SELECT A,P", avgEducationSpendingResponseHandler);
+                        drawSheetName("educationPerCapita", "SELECT A,B,C,D,E,F,G", totalGDPEducationSpendingResponseHandler);
+                        drawSheetName("SharedGDP", "SELECT A,H,K,L", SharedGDPResponseHandler);
+                        drawSheetName("education(billion)", "SELECT A,H", fastGrowEducationSpendingResponseHandler);
+                        drawSheetName("education(billion)", "SELECT A,I", fastGrowRateEducationSpendingResponseHandler);
+                    } //drawAllSheets
+
+
+                    function drawSheetName(sheetName, query, responseHandler){
+                        var queryString = encodeURIComponent(query); 
+                        var query = new google.visualization.Query(
+                            "https://docs.google.com/spreadsheets/d/1fWBuAxDNyMAjCMXcghR0PKu70uZLaffMhxkngFdBOk4/gviz/tq?sheet="
+                            + sheetName + '&headers=1&tq=' + queryString);
+                    
+                    query.send(responseHandler);
+                    } //drawSheetName
+
+                    function checkError(response){
+                        if (response.isError()) {
+                            alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+                            return;
+                        }
+                    } //checkError
+
+                    function educationSpendingResponseHandler(response){
+                        var data = response.getDataTable();
+                        data.sort({column: 6, desc: true});
+
+                        var options = {
+                            title: 'Educational Expenditure in 2013-2018',
+                            vAxis: {title: "Spending in Billions($)"},
+                            hAxis: {title: "Country Name"}
+                        };
+
+                        var chart = new google.visualization.ColumnChart(document.getElementById("education_spending_div"));
+                        chart.draw(data, options);
+                    } //edcuationSpendingResponseHandler
+
+
+                    function avgEducationSpendingResponseHandler(response){
+                    checkError(response);
+                    var data = response.getDataTable();
+                    data.sort({column: 1, desc: true});
+
+                    var options = {
+                            title: "Average Educational Expenditure (2013-2018)",
+                            pieSliceText: "label",
+                            slices: { 1: {offset: 0.3},
+                                      4: {offset: 0.2},
+                                      13: {offset: 0.1},
+                            },
+                    }
+
+                    var chart = new google.visualization.PieChart(document.getElementById("avg_education_spending_div"));
+                    chart.draw(data, options);
+                    } //avgEducationSpendingResponseHandler
+
+
+                    function totalGDPEducationSpendingResponseHandler(response){
+                    checkError(response);
+                    var data = response.getDataTable();
+                    data.sort({column: 1, desc: true});
+
+                    var options = {
+                        legend: 'none',
+                        bars: 'horizontal',
+                        isStacked: true,
+                        annotations: {alwaysOutside: true},
+                        title: "Education Expenditure Per Capita in 2013-2018",
+                        vAxis: {title: "Spending in USD ($)"},
+                        hAxis: {title: "Country Name"}
+                    }; 
+                    
+                    var chart = new google.visualization.ColumnChart(document.getElementById('total_gdp_education_spending_div'));
+                    chart.draw(data, options);
+                    } //totalGDPEducationSpendingResponseHandler
+
+
+                    function SharedGDPResponseHandler(response){
+                    checkError(response);
+                    var data = response.getDataTable();
+                    data.sort({column: 1, desc: true});
+
+                    var options = {
+                        title: "Education Expenditure vs. GDP in 2018",
+                        vAxis: {title: "GDP Per Capita in USD"},
+                        hAxis: {title: "Education Per Capita in USD"},
+                        colors: ["#61058B"]
+                    }; 
+                    
+                    var chart = new google.visualization.BubbleChart(document.getElementById('education_shared_gdp_div'));
+                    chart.draw(data, options);
+                    } //SharedGDPResponseHandler
+
+
+                    function fastGrowEducationSpendingResponseHandler(response){
+                        checkError(response);
+                        var data = response.getDataTable();
+                        data.sort({column: 1, desc: true});
+
+                        var options = {
+                            legend:"none",
+                            bars: "horizontal",
+                            colors: ["#EA352E"],
+                            annotation: {alwaysOutside: true},
+                            title: 'Fastest Growing in Educational Expenditure in Billion(2013-2018)',
+                            vAxis: {title: "Country Name"},
+                            hAxis: {title: "Grow Value($)"}
+                        };
+
+                        var view = new google.visualization.DataView(data);
+                        view.setColumns([0,1, {
+                            calc: function(dt, row){
+                                return Math.floor(dt.getFormattedValue(row, 1)) + 'B';
+                            },
+                            sourceColumn: 1,
+                            type: 'string',
+                            role: 'annotation'
+                        }]);
+                        
+                        var  chart = new google.visualization.BarChart(document.getElementById('fast_grow_education_spending_div'));
+                        chart.draw(view, options);
+                    } //fastGrowEducationSpendingResponseHandler
+
+
+                    function fastGrowRateEducationSpendingResponseHandler(response){
+                        checkError(response);
+                        var data = response.getDataTable();
+                        data.sort({column: 1, desc: true});
+
+                        var options = {
+                            legend:"none",
+                            bars: "horizontal",
+                            colors: ["#33b679"],
+                            annotation: {alwaysOutside: true},
+                            title: 'Fastest Growing in Educational Expenditure in Percentage(2013-2018)',
+                            vAxis: {title: "Grow Rate(%）"},
+                            hAxis: {title: "Country Name"}
+                        };
+
+                        var view = new google.visualization.DataView(data);
+                        view.setColumns([0,1, {
+                            calc: function(dt, row){
+                                return Math.ceil(dt.getFormattedValue(row, 1)) + '%';
+                            },
+                            sourceColumn: 1,
+                            type: 'string',
+                            role: 'annotation'
+                        }]);
+
+                        var chart = new google.visualization.ColumnChart(document.getElementById("fast_grow_rate_education_spending_div"));
+                        chart.draw(view, options );
+                    }; //fastGrowEducationRateSpendingResponseHandler
+
+
+                </script>
+
+                <h3>Overall Educational Expenditure</h3>
+                <div id="education_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: United States - increases constently</h4>
+                <h4>Top 2: China - increases yearly</h4>
+                <h4>Russia and France dropped in 2015 and 2016</h4>
+                <br>
+                <h3>Average Educational Expenditure</h3>
+                <div id="avg_education_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: United States - $832 billion, 37%</h4>
+                <h4>Top 2: China - $203 billion, 9%</h4>
+                <h4>Saudi Arabia - $52 billion, 2.3%</h4>
+                <br>
+                <h3>Education Expenditure Per Capita</h3>
+                <div id="total_gdp_education_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1(in total): Austrilia. Although it decreased from $3,292 t0 $2784. SECOND in 2018.</h4>
+                <h4>Top 2(in total): United States. Ranking FIRST in 2018.</h4>
+                <h4>China: The second from the BOTTOM due to large population.</h4>
+                <br>
+                <h3>Educational Spending Shared as % GDP in 2018</h3>
+                <div id="education_shared_gdp_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1(Percentage ): Saudi Arabia - 7%, $1692</h4>
+                <h4>Top 1(Value): United States - $2803, only 4%</h4>
+                <h4>Bottom: China， India</h4>
+                <br>
+                <h3>Fastest Growing Countries in Fixed Value</h3>
+                <div id="fast_grow_education_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: Unted States - 159.34 billion growth</h4>
+                <h4>Top 2: China - 77 billion of grwo2. However, it's just half value of the United States</h4>
+                <h4>Russia, Brazil, Japan all dropped more than 20 billion.</h4>
+                <h4>Japan droped the most - 27 billion.</h4>
+                <br>
+                <h3>Fastest Growing Countries in Percentage</h3>
+                <div id="fast_grow_rate_education_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: India - 46.3% of growth</h4>
+                <h4>Top 2: China - 45.8% of growth</h4>
+                <h4>Russia dropped the most - (-25.4)%</h4>
+                <h4></h4>
+
+            </div><!-- content -->
+        </div><!-- site_content -->
+
+        <div id="content_footer">
+            <div id="footer">
+                &copy; <script>var d = new Date(); document.write(d.getFullYear());</script>            
+                | YUSHUANG(ZOEY) ZHAO
+            </div><!--footer-->
+
+        </div><!--content_footer -->
+
+    </div><!-- main --> 
+</body>
+
+</html>

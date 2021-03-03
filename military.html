@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title> Military Expenditure</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="main">
+        <div id="header">
+            <div id="logo">
+                <div id="logo_text">
+                    <h1><a href="index.html">DATS 6401</a> | <span class="logo_color">Project 1</span></h1>
+                    <h2>Visualization of Educational, Healthcare, Military Expenditure of the Top 10 Nations</h2>
+                </div><!-- logo_text-->
+            </div><!-- logo-->
+
+            <div id="menubar">
+                <ul id="menu">
+                    <li><a href="index.html">HOME</a></li>
+                    <li><a href="gdp.html">GDP OVERVIEW</a></li>
+                    <li><a href="educational.html">EDUCATION</a></li>
+                    <li><a href="healthcare.html">HEALTHCARE</a></li>
+                    <li class="selected"><a href="military.html">MILITARY</a></li>
+                </ul> <!--menu -->
+            </div><!-- menubar -->
+        </div><!-- header -->
+
+        <div id="site_content">
+
+            <div id="content">
+                <script src="https://www.gstatic.com/charts/loader.js"></script>
+                <script>
+                    google.charts.load('current', {'packages':['corechart', 'geochart']});
+                    google.charts.setOnLoadCallback(drawAllSheets);
+
+                    function drawAllSheets() {
+                        drawSheetName("military(billion)", "SELECT A,H", militarySpendingResponseHandler);
+                        drawSheetName("SharedGDP", "SELECT A,J,K,N", SharedGDPResponseHandler);
+                        drawSheetName("edu_health_mil", "SELECT A,B,C,D,E,F,G", educationMilitarySpendingResponseHandler);
+                        drawSheetName("edu_health_mil", "SELECT A,I,J,K,L,M,N", healthcareMilitarySpendingResponseHandler);
+                        drawSheetName("edu_health_mil", "SELECT A,P,Q,R", eduHealthMilSpendingResponseHandler);
+                        
+                        
+                    } //drawAllSheets
+
+                    function drawSheetName(sheetName, query, responseHandler){
+                        var queryString = encodeURIComponent(query); 
+                        var query = new google.visualization.Query(
+                            "https://docs.google.com/spreadsheets/d/1fWBuAxDNyMAjCMXcghR0PKu70uZLaffMhxkngFdBOk4/gviz/tq?sheet="
+                            + sheetName + '&headers=1&tq=' + queryString);
+                    
+                    query.send(responseHandler);
+                    } //drawSheetName
+
+                    function checkError(response){
+                        if (response.isError()) {
+                            alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+                            return;
+                        }
+                    } //checkError
+
+                    function militarySpendingResponseHandler(response){
+                        var data = response.getDataTable();
+                        data.sort({column: 1, desc: true});
+
+                        var options = {
+                            colorAxis: {colors: ["#7ED085", "#237F2E"]}, 
+                            vAxis: {title: "Top 10 Countries by Military Spending in US $ (Billions)"}
+                        };
+
+                        var chart = new google.visualization.GeoChart(document.getElementById("military_spending_div"));
+                        chart.draw(data, options);
+                    } //militarySpendingResponseHandler
+
+
+                    function SharedGDPResponseHandler(response){
+                    checkError(response);
+                    var data = response.getDataTable();
+                    data.sort({column: 1, desc: true});
+
+                    var options = {
+                        title: "Military Expenditure vs. GDP in 2018",
+                        vAxis: {title: "Military Expenditure Per Capita in USD"},
+                        hAxis: {title: "GDP Per Capita in USD"},
+                        colorAxis: {colors: ['#e7711c', '#4374e0']},
+                    }; 
+                    
+                    var chart = new google.visualization.BubbleChart(document.getElementById('military_shared_gdp_div'));
+                    chart.draw(data, options);
+                    } //SharedGDPResponseHandler
+
+
+
+                    function educationMilitarySpendingResponseHandler(response){
+                        var data = response.getDataTable();
+                        data.sort({column: 6, desc: true});
+
+                        var options = {
+                            title: 'Education to Overall Military Expenditure in 2013-2018',
+                            vAxis: {title: "Times"},
+                            hAxis: {title: "Country Name"}
+                        };
+
+                        var chart = new google.visualization.ColumnChart(document.getElementById("education_military_spending_div"));
+                        chart.draw(data, options);
+                    } //educationMilitarySpendingResponseHandler       
+
+
+
+                    function healthcareMilitarySpendingResponseHandler(response){
+                        var data = response.getDataTable();
+                        data.sort({column: 6, desc: true});
+
+                        var options = {
+                            title: 'Healthcare to Overall Military Expenditure in 2013-2018',
+                            vAxis: {title: "Times"},
+                            hAxis: {title: "Country Name"}
+                        };
+
+                        var chart = new google.visualization.ColumnChart(document.getElementById("healthcare_military_spending_div"));
+                        chart.draw(data, options);
+                    } //healthcareMilitarySpendingResponseHandler       
+
+
+
+                    function eduHealthMilSpendingResponseHandler(response){
+                         checkError(response);
+                         var data = response.getDataTable();
+                         data.sort({column: 1, desc: true});
+                         
+                         var options = {
+                             title: "Education vs. Healthcare vs. Military (Average）",
+                             vAxis: {title: "Expenditure in Billion($)"},
+                             hAxis: {title: "Country Name"}
+                         };
+
+                        var chart = new google.visualization.LineChart(document.getElementById("edu_health_mil_spending_div"));
+                        chart.draw(data, options);
+
+                    } //eduHealthMilSpendingResponseHandler
+
+
+                </script>
+
+                <h3>Average Military Expenditure (2013-2018)</h3>
+                <div id="military_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: United States -$655 billion</h4>
+                <h4>Top 2: China - $215 billion, three times less than United States</h4>
+                <h4>The least: Canada - $19.5 bllion</h4>
+                <br>
+                <h3>Military Expenditure Shared of GDP</h3>
+                <div id="military_shared_gdp_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: Saudi Arabia - $2208 Per Capita, 9% of total GDP</h4>
+                <h4>Top 2: United States - $2090 Per Capita, only 3% of total GDP</h4>
+                <h4>China: Total GDP ranked the second, $9976 Per Capita.However, Military Per Capita is ONLY $182, 1.82% of total GDP</h4>
+                <br>
+                <h3>Education to Military Expenditure</h3>
+                <div id="education_military_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top1: Brazil, education spending 4 times more than military spending.</h4>
+                <h4>Canada decresed the most.</h4>
+                <br>
+                <h3>Healthcare to Military Expenditure </h3>
+                <div id="healthcare_military_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: Japan</h4>
+                <h4>Canada decreased most in total</h4>
+                <h4>Although United States increses spending, ranked 8th.</h4>
+                <h4>China and Korea Rep. constantly increases their healthcre expenditure.</h4>
+                <br>
+                <h3>Eductaion and Healthcare Expenditure to Overall Military Expenditure</h3>
+                <div id="edu_health_mil_spending_div" style="width: 800px; height:500px;"></div>
+                <h4>Top 1: United States in education, healthcare and military spending</h4>
+                <h4>Austrilia spends more in healthcare than military.</h4>
+                <h4>Saudi Arabis spends more in military instead of healthcare and education.</h4>
+                <br>
+
+
+
+            </div><!-- content -->
+        </div><!-- site_content -->
+
+        <div id="content_footer">
+            <div id="footer">
+                &copy; <script>var d = new Date(); document.write(d.getFullYear());</script>       
+                | Yushuang(Zoey) Zhao
+            </div><!--footer-->
+
+        </div><!--content_footer -->
+
+    </div><!-- main --> 
+</body>
+
+</html>
